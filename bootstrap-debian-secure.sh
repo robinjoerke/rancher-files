@@ -171,47 +171,25 @@ ufw --force reset
 ufw default allow outgoing
 ufw default deny incoming
 
-if [[ "${ROLE}" == "etcd-cp" ]]; then
-  # Ports for etcd + control-plane nodes
-  ufw allow 22/tcp            # SSH
-  ufw allow 6443/tcp          # Kubernetes API server
-  ufw allow 2379:2380/tcp     # etcd client and server communication
-  ufw allow 10250:10252/tcp   # Kubelet, Kube-scheduler, Kube-controller-manager
-  ufw allow 8472/udp          # Flannel VXLAN overlay network
-  ufw allow 4789/udp          # Flannel VXLAN overlay network
-  ufw allow 9099/tcp          # Kubelet health check port
-  ufw allow 9443/tcp          # Kubernetes Dashboard (if enabled)
+ufw allow 22/tcp            # SSH
+ufw allow 6443/tcp          # Kubernetes API server
+ufw allow 9345/tcp          # RKE2 supervisor API
+ufw allow 10250/tcp         # kubelet metrics
+ufw allow 8472/udp          # Canal CNI with VXLAN
+ufw allow 9099/tcp          # Canal CNI health checks
   
-elif [[ "${ROLE}" == "worker" ]]; then
+if [[ "${ROLE}" == "etcd-cp" || "${ROLE}" == "rancher" ]]; then
+  # Ports for etcd + control-plane nodes
+  ufw allow 2379:2381/tcp     # etcd client port / etcd peer port / etcd metrics port
+fi  
+if [[ "${ROLE}" == "worker" || "${ROLE}" == "rancher" ]]; then
   # Ports for worker nodes
-  ufw allow 22/tcp            # SSH
   ufw allow 80/tcp            # HTTP (for services running on worker nodes)
   ufw allow 443/tcp           # HTTPS (for secure Kubernetes communication)
-  ufw allow 10250:10252/tcp   # Kubelet (for node communication)
-  ufw allow 8472/udp          # Flannel VXLAN overlay network
-  ufw allow 9796/tcp          # Metrics server (optional, if used)
-  ufw allow 9100/tcp          # Node exporter (optional, for Prometheus)
   ufw allow 30000:32767/tcp   # NodePort services (for accessing Kubernetes services externally)
-  ufw allow 30000:32767/udp   # NodePort services (UDP traffic, if applicable)
 
-elif [[ "${ROLE}" == "rancher" ]]; then
-  # Ports for rancher node (acting as etcd + control-plane + worker)
-  ufw allow 22/tcp            # SSH
-  ufw allow 6443/tcp          # Kubernetes API server
-  ufw allow 2379:2380/tcp     # etcd client and server communication
-  ufw allow 10250:10252/tcp   # Kubelet, Kube-scheduler, Kube-controller-manager
-  ufw allow 8472/udp          # Flannel VXLAN overlay network
-  ufw allow 4789/udp          # Flannel VXLAN overlay network
-  ufw allow 9099/tcp          # Kubelet health check port
-  ufw allow 9443/tcp          # Kubernetes Dashboard (if enabled)
-  ufw allow 443/tcp           # HTTPS (common for secure communication with Rancher)
-  ufw allow 80/tcp            # HTTP (Rancher and Kubernetes services may use this)
-  ufw allow 9345/tcp          # Rancher UI (Rancher Server UI access)
-  ufw allow 9796/tcp          # Metrics server (optional, for Prometheus)
-  ufw allow 9100/tcp          # Node exporter (optional, for Prometheus)
-  ufw allow 30000:32767/tcp   # NodePort services (for accessing Kubernetes services externally)
-  ufw allow 30000:32767/udp   # NodePort services (UDP traffic, if applicable)
 fi
+
 
 ufw --force enable
 ufw status verbose
@@ -237,38 +215,7 @@ EOF
 systemctl enable --now fail2ban
 
 # -----------------------------------------------------------------------------
-# 8) Docker CE (official repo; auto-detect Debian/Ubuntu + codename)
-# -----------------------------------------------------------------------------
-log "Installing Docker CE…"
-apt-get remove -y docker docker-engine docker.io containerd runc || true
-apt-get install -y ca-certificates curl gnupg lsb-release
-
-install -d -m 0755 /etc/apt/keyrings
-if [[ ! -f /etc/apt/keyrings/docker.gpg ]]; then
-  curl -fsSL https://download.docker.com/linux/$(. /etc/os-release; echo "$ID")/gpg \
-    | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-  chmod a+r /etc/apt/keyrings/docker.gpg
-fi
-
-ARCH=$(dpkg --print-architecture)
-CODENAME=$(. /etc/os-release; echo "$VERSION_CODENAME")
-IDNAME=$(. /etc/os-release; echo "$ID")
-# NOTE: Using $ID ensures Debian vs Ubuntu is correct automatically.
-echo \
-  "deb [arch=${ARCH} signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/${IDNAME} ${CODENAME} stable" \
-  > /etc/apt/sources.list.d/docker.list
-
-apt-get update -y
-apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-
-systemctl enable --now docker
-# Give our admin user Docker access (newgrp required on current session)
-if getent group docker >/dev/null 2>&1; then
-  usermod -aG docker "${USERNAME}"
-fi
-
-# -----------------------------------------------------------------------------
-# 9) Longhorn support (open-iscsi) — typically workers
+# 8) Longhorn support (open-iscsi) — typically workers
 # -----------------------------------------------------------------------------
 if [[ "${ROLE}" == "worker" && "${INSTALL_ISCSI_ON_WORKER}" == "true" ]]; then
   log "Installing open-iscsi for Longhorn (worker)…"
