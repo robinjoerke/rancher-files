@@ -173,11 +173,17 @@ ufw default deny incoming
 ufw allow from 10.0.0.0/8 # 
 ufw allow 22/tcp            # SSH
 
-sudo ufw allow 6443/tcp    # Kubernetes API server
-sudo ufw allow 9345/tcp    # RKE2 supervisor API
-sudo ufw allow 10250/tcp   # kubelet metrics
-#sudo ufw allow from 10.0.0.0/8 to any port 8472 proto udp    # Canal CNI with VXLAN
-sudo ufw allow 9099/tcp    # Canal CNI health checks   
+ufw allow 6443/tcp    # Kubernetes API server
+ufw allow 9345/tcp    # RKE2 supervisor API
+ufw allow 10250/tcp   # kubelet metrics
+# ufw allow from 10.0.0.0/8 to any port 8472 proto udp    # Canal CNI with VXLAN
+
+##reference all nodes here
+ufw allow from 157.90.155.238 to any port 8472 proto udp
+ufw allow from 23.88.114.215 to any port 8472 proto udp
+ufw allow from 138.199.234.7 to any port 8472 proto udp
+
+ufw allow 9099/tcp    # Canal CNI health checks   
   
 if [[ "${ROLE}" == "etcd-cp" || "${ROLE}" == "rancher" ]]; then
   # Ports for etcd + control-plane nodes
