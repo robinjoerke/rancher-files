@@ -181,6 +181,7 @@ cat <<EOF > "/etc/ufw-ip-sync/ips.conf"
 EOF
 
 cat <<EOF > "/etc/ufw-ip-sync/static-rules.conf"
+# Examples (no leading 'ufw' — just the arguments):
 allow 22/tcp # SSH
 EOF
 
