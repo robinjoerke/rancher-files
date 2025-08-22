@@ -108,14 +108,10 @@ apply_rule() {
 
   # Check if the rule exists before deleting it
   if [[ "$action" == "delete" ]]; then
-    if ufw show added | grep -q "$rule"; then
-      if (( DRY_RUN == 1 )); then
-        echo "[DRY] ufw ${action} ${rule}"
-      else
-        ufw ${action} ${rule}
-      fi
+    if (( DRY_RUN == 1 )); then
+      echo "[DRY] ufw ${action} ${rule}"
     else
-      echo "[INFO] Rule not found, skipping deletion: $rule"
+      ufw ${action} ${rule}
     fi
   else
     if (( DRY_RUN == 1 )); then
@@ -259,17 +255,12 @@ sort -u -o "$TMP_DYNAMIC_DESIRED" "$TMP_DYNAMIC_DESIRED"
 # ---------- Sync STATIC set ----------
 STATIC_STATE="${STATE_DIR}/static.state"
 echo "=== Syncing STATIC rules ==="
-echo "$TMP_STATIC_DESIRED"
 sync_rule_set "$STATIC_STATE" "$TMP_STATIC_DESIRED" "static"
-echo "ufw show added after ststic sync: "
-ufw show added
 
 # ---------- Sync DYNAMIC set ----------
 DYN_STATE="${STATE_DIR}/dynamic.state"
 echo "=== Syncing DYNAMIC rules ==="
 sync_rule_set "$DYN_STATE" "$TMP_DYNAMIC_DESIRED" "dynamic"
-echo "ufw show added after dynamic sync: "
-ufw show added
 echo "All done."
 EOF
 
@@ -285,7 +276,9 @@ echo "Applying rules..."
 $SCRIPT_PATH
 
 # Setup cron job to run every 10 minutes
-echo "Setting up cron job for periodic sync..."
-(crontab -l 2>/dev/null; echo "*/10 * * * * root $SCRIPT_PATH >/var/log/ufw-ip-sync.log 2>&1") | crontab -
+crontab -l 2>/dev/null | grep -F "$SCRIPT_PATH" || echo "Setting up cron job for periodic sync..."
+# Check if the cron job already exists
+(crontab -l 2>/dev/null | grep -F "$SCRIPT_PATH" || echo "*/10 * * * * root $SCRIPT_PATH >/var/log/ufw-ip-sync.log 2>&1") | crontab -
+
 
 echo "Setup complete!"
