@@ -188,11 +188,11 @@ EOF
 
 log "writing dynamic firewall rules (applied for all ips from whitelist)"
 cat <<EOF > "/etc/ufw-ip-sync/dynamic-rules.conf"
-tcp:6443    # Kubernetes API server
-tcp:9345    # RKE2 supervisor API
-tcp:10250   # kubelet metrics
-udp:8472
-tcp:9099    # Canal CNI health checks   
+6443/tcp    # Kubernetes API server
+9345/tcp    # RKE2 supervisor API
+10250/tcp   # kubelet metrics
+8472/udp
+9099/tcp    # Canal CNI health checks   
 EOF
 
 
@@ -201,7 +201,7 @@ if [[ "${ROLE}" == "etcd-cp" || "${ROLE}" == "rancher" ]]; then
   log "writing dynamic firewall rules for etcd-cp and rancher nodes"
   # Ports for etcd + control-plane nodes
   cat <<EOF >> "/etc/ufw-ip-sync/dynamic-rules.conf"
-allow 2379:2381/tcp     # etcd client port / etcd peer port / etcd metrics port 
+2379:2381/tcp     # etcd client port / etcd peer port / etcd metrics port 
 EOF
 fi  
 if [[ "${ROLE}" == "worker" || "${ROLE}" == "rancher" ]]; then
