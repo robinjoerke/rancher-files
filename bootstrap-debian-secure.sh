@@ -183,16 +183,16 @@ EOF
 log "writing static firewall rules"
 cat <<EOF > "/etc/ufw-ip-sync/static-rules.conf"
 # Examples (no leading 'ufw' — just the arguments):
-allow 22/tcp # SSH
+allow 22/tcp
 EOF
 
 log "writing dynamic firewall rules (applied for all ips from whitelist)"
 cat <<EOF > "/etc/ufw-ip-sync/dynamic-rules.conf"
-6443/tcp    # Kubernetes API server
-9345/tcp    # RKE2 supervisor API
-10250/tcp   # kubelet metrics
+6443/tcp
+9345/tcp
+10250/tcp
 8472/udp
-9099/tcp    # Canal CNI health checks   
+9099/tcp
 EOF
 
 
@@ -201,19 +201,19 @@ if [[ "${ROLE}" == "etcd-cp" || "${ROLE}" == "rancher" ]]; then
   log "writing dynamic firewall rules for etcd-cp and rancher nodes"
   # Ports for etcd + control-plane nodes
   cat <<EOF >> "/etc/ufw-ip-sync/dynamic-rules.conf"
-2379:2381/tcp     # etcd client port / etcd peer port / etcd metrics port 
+2379:2381/tcp
 EOF
 fi  
 if [[ "${ROLE}" == "worker" || "${ROLE}" == "rancher" ]]; then
   log "writing static firewall rules for worker and rancher nodes"
   # Ports for worker nodes
   cat <<EOF >> "/etc/ufw-ip-sync/static-rules.conf"
-allow 80/tcp            # HTTP (for services running on worker nodes)
-allow 443/tcp           # HTTPS (for secure Kubernetes communication)
+allow 80/tcp
+allow 443/tcp
 EOF
   log "writing dynamic firewall rules for etcd-cp and rancher nodes"
 cat <<EOF >> "/etc/ufw-ip-sync/dynamic-rules.conf"
-30000:32767/tcp   # NodePort services (for accessing Kubernetes services externally)
+30000:32767/tcp
 EOF
 fi
 
