@@ -171,11 +171,13 @@ sync_rule_set() {
 
   if [[ -s "$TMP_DEL" ]]; then
     while IFS= read -r r; do
+      echo "deleting rule $r"
       apply_rule delete "$r"
     done < "$TMP_DEL"
   fi
   if [[ -s "$TMP_ADD" ]]; then
     while IFS= read -r r; do
+      echo "adding rule $r"
       apply_rule "" "$r"
     done < "$TMP_ADD"
   fi
