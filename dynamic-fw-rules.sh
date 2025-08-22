@@ -108,7 +108,7 @@ apply_rule() {
 
   # Check if the rule exists before deleting it
   if [[ "$action" == "delete" ]]; then
-    if ufw status | grep -q "$rule"; then
+    if ufw show added | grep -q "$rule"; then
       if (( DRY_RUN == 1 )); then
         echo "[DRY] ufw ${action} ${rule}"
       else
