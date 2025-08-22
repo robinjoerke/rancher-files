@@ -234,13 +234,17 @@ sort -u -o "$TMP_DYNAMIC_DESIRED" "$TMP_DYNAMIC_DESIRED"
 # ---------- Sync STATIC set ----------
 STATIC_STATE="${STATE_DIR}/static.state"
 echo "=== Syncing STATIC rules ==="
+echo "$TMP_STATIC_DESIRED"
 sync_rule_set "$STATIC_STATE" "$TMP_STATIC_DESIRED" "static"
+echo "ufw show added after ststic sync: "
+ufw show added
 
 # ---------- Sync DYNAMIC set ----------
 DYN_STATE="${STATE_DIR}/dynamic.state"
 echo "=== Syncing DYNAMIC rules ==="
 sync_rule_set "$DYN_STATE" "$TMP_DYNAMIC_DESIRED" "dynamic"
-
+echo "ufw show added after dynamic sync: "
+ufw show added
 echo "All done."
 EOF
 
