@@ -129,6 +129,17 @@ apply_rule() {
   fi
 }
 
+# Function to build a dynamic UFW rule for each host
+build_dynamic_rule_line() {
+  local proto="$1"   # Protocol (tcp or udp)
+  local port="$2"    # Port
+  local ip="$3"      # IP address
+  local group="$4"   # Group name (optional for tagging)
+
+  # Build the UFW rule in the correct format
+  echo "allow ${proto} from ${ip} to any port ${port} comment \"sg:${group}\""
+}
+
 sync_rule_set() {
   # Args:
   #   $1 = state_file
