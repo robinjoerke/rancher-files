@@ -200,7 +200,7 @@ if [[ "${ROLE}" == "etcd-cp" || "${ROLE}" == "rancher" ]]; then
   # Ports for etcd + control-plane nodes
   cat <<EOF >> "/etc/ufw-ip-sync/dynamic-rules.conf"
   allow 2379:2381/tcp     # etcd client port / etcd peer port / etcd metrics port 
-  EOF
+EOF
 fi  
 if [[ "${ROLE}" == "worker" || "${ROLE}" == "rancher" ]]; then
   # Ports for worker nodes
@@ -208,10 +208,10 @@ if [[ "${ROLE}" == "worker" || "${ROLE}" == "rancher" ]]; then
   allow 80/tcp            # HTTP (for services running on worker nodes)
   allow 443/tcp           # HTTPS (for secure Kubernetes communication)
   
-  EOF
+EOF
   cat <<EOF >> "/etc/ufw-ip-sync/dynamic-rules.conf"
   30000:32767/tcp   # NodePort services (for accessing Kubernetes services externally)
-  EOF
+EOF
 fi
 
 
