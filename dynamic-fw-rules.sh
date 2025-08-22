@@ -136,7 +136,7 @@ build_dynamic_rule_line() {
   local ip="$3"      # IP address
 
   # Build the UFW rule in the correct format
-  echo "allow ${proto} from ${ip} to any port ${port} comment \"sg:${group}\""
+  echo "allow ${proto} from ${ip} to any port ${port}"
 }
 
 sync_rule_set() {
