@@ -168,7 +168,7 @@ apt-get install -y vim htop
 log "Installing and configuring UFW…"
 apt-get install -y ufw
 ufw --force reset
-cat <<EOF > /etc/ufw-ip-sync/ips.conf"
+cat <<EOF > "/etc/ufw-ip-sync/ips.conf"
 157.90.155.238
 23.88.114.215
 138.199.234.7
@@ -180,12 +180,12 @@ cat <<EOF > /etc/ufw-ip-sync/ips.conf"
 148.251.137.75
 EOF
 
-cat <<EOF > /etc/ufw-ip-sync/static-rules.conf"
+cat <<EOF > "/etc/ufw-ip-sync/static-rules.conf"
 allow 22/tcp # SSH
 EOF
 
 
-cat <<EOF > /etc/ufw-ip-sync/dynamic-rules.conf"
+cat <<EOF > "/etc/ufw-ip-sync/dynamic-rules.conf"
 tcp:6443    # Kubernetes API server
 tcp:9345    # RKE2 supervisor API
 tcp:10250   # kubelet metrics
@@ -197,18 +197,18 @@ EOF
   
 if [[ "${ROLE}" == "etcd-cp" || "${ROLE}" == "rancher" ]]; then
   # Ports for etcd + control-plane nodes
-  cat <<EOF >> /etc/ufw-ip-sync/dynamic-rules.conf"
+  cat <<EOF >> "/etc/ufw-ip-sync/dynamic-rules.conf"
   allow 2379:2381/tcp     # etcd client port / etcd peer port / etcd metrics port 
   EOF
 fi  
 if [[ "${ROLE}" == "worker" || "${ROLE}" == "rancher" ]]; then
   # Ports for worker nodes
-  cat <<EOF >> /etc/ufw-ip-sync/static-rules.conf"
+  cat <<EOF >> "/etc/ufw-ip-sync/static-rules.conf"
   allow 80/tcp            # HTTP (for services running on worker nodes)
   allow 443/tcp           # HTTPS (for secure Kubernetes communication)
   
   EOF
-  cat <<EOF >> /etc/ufw-ip-sync/dynamic-rules.conf"
+  cat <<EOF >> "/etc/ufw-ip-sync/dynamic-rules.conf"
   30000:32767/tcp   # NodePort services (for accessing Kubernetes services externally)
   EOF
 fi
