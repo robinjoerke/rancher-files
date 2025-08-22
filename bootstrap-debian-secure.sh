@@ -168,54 +168,56 @@ apt-get install -y vim htop
 log "Installing and configuring UFW…"
 apt-get install -y ufw
 ufw --force reset
-ufw default allow outgoing
-ufw default deny incoming
-ufw allow from 10.0.0.0/8 # 
-ufw allow 22/tcp            # SSH
+cat <<EOF > /etc/ufw-ip-sync/ips.conf"
+157.90.155.238
+23.88.114.215
+138.199.234.7
+168.119.249.28
+168.119.49.122
+49.12.222.220
+148.251.138.100
+148.251.137.76
+148.251.137.75
+EOF
 
-ufw allow 6443/tcp    # Kubernetes API server
-ufw allow 9345/tcp    # RKE2 supervisor API
-ufw allow 10250/tcp   # kubelet metrics
-# ufw allow from 10.0.0.0/8 to any port 8472 proto udp    # Canal CNI with VXLAN
+cat <<EOF > /etc/ufw-ip-sync/static-rules.conf"
+allow 22/tcp # SSH
+EOF
 
-##reference all nodes here
-ufw allow from 157.90.155.238 to any port 8472 proto udp
-ufw allow from 23.88.114.215 to any port 8472 proto udp
-ufw allow from 138.199.234.7 to any port 8472 proto udp
 
-ufw allow 9099/tcp    # Canal CNI health checks   
+cat <<EOF > /etc/ufw-ip-sync/dynamic-rules.conf"
+allow 6443/tcp    # Kubernetes API server
+allow 9345/tcp    # RKE2 supervisor API
+allow 10250/tcp   # kubelet metrics
+allow 8472/udp
+allow 9099/tcp    # Canal CNI health checks   
+EOF
+
+
   
 if [[ "${ROLE}" == "etcd-cp" || "${ROLE}" == "rancher" ]]; then
   # Ports for etcd + control-plane nodes
-  ufw allow 2379:2381/tcp     # etcd client port / etcd peer port / etcd metrics port
+  cat <<EOF >> /etc/ufw-ip-sync/dynamic-rules.conf"
+  allow 2379:2381/tcp     # etcd client port / etcd peer port / etcd metrics port 
+  EOF
 fi  
 if [[ "${ROLE}" == "worker" || "${ROLE}" == "rancher" ]]; then
   # Ports for worker nodes
-  ufw allow 80/tcp            # HTTP (for services running on worker nodes)
-  ufw allow 443/tcp           # HTTPS (for secure Kubernetes communication)
-  ufw allow 30000:32767/tcp   # NodePort services (for accessing Kubernetes services externally)
-fi
-# sudo ufw allow from 10.0.0.0/8 to any port 6443 proto tcp    # Kubernetes API server
-# sudo ufw allow from 10.0.0.0/8 to any port 9345 proto tcp    # RKE2 supervisor API
-# sudo ufw allow from 10.0.0.0/8 to any port 10250 proto tcp   # kubelet metrics
-# sudo ufw allow from 10.0.0.0/8 to any port 8472 proto udp    # Canal CNI with VXLAN
-# sudo ufw allow from 10.0.0.0/8 to any port 9099 proto tcp    # Canal CNI health checks   
+  cat <<EOF >> /etc/ufw-ip-sync/static-rules.conf"
+  allow 80/tcp            # HTTP (for services running on worker nodes)
+  allow 443/tcp           # HTTPS (for secure Kubernetes communication)
   
-# if [[ "${ROLE}" == "etcd-cp" || "${ROLE}" == "rancher" ]]; then
-#   # Ports for etcd + control-plane nodes
-#   sudo ufw allow from 10.0.0.0/8 to any port 2379:2381 proto tcp     # etcd client port / etcd peer port / etcd metrics port
-# fi  
-# if [[ "${ROLE}" == "worker" || "${ROLE}" == "rancher" ]]; then
-#   # Ports for worker nodes
-#   ufw allow 80/tcp            # HTTP (for services running on worker nodes)
-#   ufw allow 443/tcp           # HTTPS (for secure Kubernetes communication)
-#   ufw allow from 10.0.0.0/8 to any port 30000:32767 proto tcp   # NodePort services (for accessing Kubernetes services externally)
+  EOF
+  cat <<EOF >> /etc/ufw-ip-sync/dynamic-rules.conf"
+  allow 30000:32767/tcp   # NodePort services (for accessing Kubernetes services externally)
+  EOF
+fi
 
-# fi
 
 
 ufw --force enable
 ufw status verbose
+sudo /usr/local/bin/ufw-ip-sync.sh
 
 # -----------------------------------------------------------------------------
 # 7) Fail2Ban minimal hardening
