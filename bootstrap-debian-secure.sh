@@ -20,14 +20,6 @@
 set -euo pipefail
 
 # ----------------------------- USER VARIABLES -------------------------------
-if [[ -z "${ROLE:-}" ]]; then
-  read -p "Enter the node role (worker, etcd-cp, rancher): " ROLE
-fi
-
-# Hostname to set for this node (use a unique value per machine)
-if [[ -z "${NEW_HOSTNAME:-}" ]]; then
-  read -p "Enter the new hostname: " NEW_HOSTNAME
-fi
 
 # Node role: "worker", "etcd-cp", or "rancher"
 if [[ -z "${ROLE:-}" ]]; then
