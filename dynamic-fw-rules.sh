@@ -34,9 +34,7 @@ EOF
 # Create static rules configuration (global UFW rules independent of IPs)
 cat <<EOF > "$CFG_DIR/static-rules.conf"
 # Examples (no leading 'ufw' — just the arguments):
-allow from 10.0.0.0/8 to any port 22 proto tcp
-allow from 192.168.1.0/24 to any port 443 proto tcp
-deny from 203.0.113.50 to any port 25 proto tcp
+allow 22/tcp
 EOF
 
 # Create the ufw-ip-sync.sh script
@@ -47,6 +45,10 @@ cat <<'EOF' > "$SCRIPT_PATH"
 #  - Static rules listed in static-rules.conf (independent of IPs)
 
 set -euo pipefail
+
+# Apply default UFW policies
+ufw default allow outgoing
+ufw default deny incoming
 
 CFG_DIR="/etc/ufw-ip-sync"
 IPS_CFG="${CFG_DIR}/ips.conf"
