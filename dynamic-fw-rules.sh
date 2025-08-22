@@ -168,16 +168,6 @@ sync_rule_set() {
 
   echo "[$LABEL] To add: $(wc -l < "$TMP_ADD") | To remove: $(wc -l < "$TMP_DEL")"
 
-  # Debug: Check what rules are going to be added or deleted
-  echo "[DEBUG] OLD (Current Rules):"
-  cat "$OLD"
-  echo "[DEBUG] DESIRED (Desired Rules):"
-  cat "$DESIRED"
-  echo "[DEBUG] TMP_ADD (Rules to Add):"
-  cat "$TMP_ADD"
-  echo "[DEBUG] TMP_DEL (Rules to Delete):"
-  cat "$TMP_DEL"
-
   # If TMP_ADD is empty, force adding the rule (even if it exists in OLD)
   if [[ ! -s "$TMP_ADD" ]]; then
     echo "Forcing rule addition because TMP_ADD is empty"
