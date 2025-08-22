@@ -172,11 +172,7 @@ ufw --force reset
 rm -f /var/lib/ufw-ip-sync/dynamic.state
 rm -f /var/lib/ufw-ip-sync/static.state
 
-curl -sSL https://raw.githubusercontent.com/robinjoerke/rancher-files/refs/heads/main/dynamic-fw-rules.sh -o dynamic-fw-rules.sh
-chmod +x dynamic-fw-rules.sh
-./dynamic-fw-rules.sh
-rm dynamic-fw-rules.sh
-
+curl -sSL https://raw.githubusercontent.com/robinjoerke/rancher-files/refs/heads/main/dynamic-fw-rules.sh  | bash
 
 log "writing ip whitelist"
 cat <<EOF > "/etc/ufw-ip-sync/ips.conf"
