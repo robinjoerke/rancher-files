@@ -168,9 +168,12 @@ apt-get install -y vim htop
 log "Installing and configuring UFW…"
 apt-get install -y ufw
 
+
 ufw --force reset
 rm -f /var/lib/ufw-ip-sync/dynamic.state
 rm -f /var/lib/ufw-ip-sync/static.state
+sudo sed -i 's/IPV6=yes/IPV6=no/' /etc/default/ufw
+
 
 curl -sSL https://raw.githubusercontent.com/robinjoerke/rancher-files/refs/heads/main/dynamic-fw-rules.sh  | bash
 
@@ -224,7 +227,7 @@ EOF
 fi
 
 /usr/local/bin/ufw-ip-sync.sh
-ufw --force enable
+ufw --force enable && ufw reload
 
 # -----------------------------------------------------------------------------
 # 7) Fail2Ban minimal hardening
