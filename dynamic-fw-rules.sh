@@ -105,27 +105,40 @@ parse_ips() {
 apply_rule() {
   local action="$1"  # "" (add) or "delete"
   local rule="$2"    # full args after ufw
-  if (( DRY_RUN == 1 )); then
-    if [[ -z "$action" ]]; then
-      echo "[DRY] ufw ${rule}"
+
+  # Check if the rule exists before deleting it
+  if [[ "$action" == "delete" ]]; then
+    if ufw status | grep -q "$rule"; then
+      if (( DRY_RUN == 1 )); then
+        echo "[DRY] ufw ${action} ${rule}"
+      else
+        ufw ${action} ${rule}
+      fi
     else
-      echo "[DRY] ufw ${action} ${rule}"
+      echo "[INFO] Rule not found, skipping deletion: $rule"
     fi
   else
-    if [[ -z "$action" ]]; then
-      ufw ${rule}
+    if (( DRY_RUN == 1 )); then
+      echo "[DRY] ufw ${action} ${rule}"
     else
       ufw ${action} ${rule}
     fi
   fi
 }
 
+
 # Function to build a dynamic UFW rule for each host
 build_dynamic_rule_line() {
   local proto="$1"   # Protocol (tcp or udp)
   local port="$2"    # Port
   local ip="$3"      # IP address
-
+  
+  # Ensure that the rule has the correct format
+  if [[ -z "$proto" || -z "$port" || -z "$ip" ]]; then
+    echo "[ERROR] Invalid arguments passed to build_dynamic_rule_line"
+    return
+  fi
+  
   # Build the UFW rule in the correct format
   echo "allow ${proto} from ${ip} to any port ${port}"
 }
