@@ -186,11 +186,11 @@ EOF
 
 
 cat <<EOF > /etc/ufw-ip-sync/dynamic-rules.conf"
-allow 6443/tcp    # Kubernetes API server
-allow 9345/tcp    # RKE2 supervisor API
-allow 10250/tcp   # kubelet metrics
-allow 8472/udp
-allow 9099/tcp    # Canal CNI health checks   
+tcp:6443    # Kubernetes API server
+tcp:9345    # RKE2 supervisor API
+tcp:10250   # kubelet metrics
+udp:8472
+tcp:9099    # Canal CNI health checks   
 EOF
 
 
@@ -209,7 +209,7 @@ if [[ "${ROLE}" == "worker" || "${ROLE}" == "rancher" ]]; then
   
   EOF
   cat <<EOF >> /etc/ufw-ip-sync/dynamic-rules.conf"
-  allow 30000:32767/tcp   # NodePort services (for accessing Kubernetes services externally)
+  30000:32767/tcp   # NodePort services (for accessing Kubernetes services externally)
   EOF
 fi
 
