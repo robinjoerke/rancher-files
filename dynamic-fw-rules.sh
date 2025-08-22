@@ -102,15 +102,6 @@ parse_ips() {
   grep -v '^\s*#' "$IPS_CFG" | awk 'NF' | trim
 }
 
-# Expand a port range (e.g., 30000:32767) into individual ports
-expand_port_range() {
-  local start_port="$1"
-  local end_port="$2"
-  for port in $(seq "$start_port" "$end_port"); do
-    echo "tcp:$port"
-  done
-}
-
 apply_rule() {
   local action="$1"  # "" (add) or "delete"
   local rule="$2"    # full args after ufw
@@ -214,18 +205,10 @@ if ((${#IPS[@]} == 0)); then
 else
   for ip in "${IPS[@]}"; do
     for rule in "${DYN_RULES[@]}"; do
-      proto="${rule%%:*}"
-      port="${rule##*:}"
-
-      # Check if it's a port range (e.g., 30000:32767)
-      if [[ "$port" == *":"* ]]; then
-        start_port=$(echo "$port" | cut -d':' -f1)
-        end_port=$(echo "$port" | cut -d':' -f2)
-        # Expand the range and add each port
-        expand_port_range "$start_port" "$end_port" >> "$TMP_DYNAMIC_DESIRED"
-      else
-        build_dynamic_rule_line "$proto" "$port" "$ip" >> "$TMP_DYNAMIC_DESIRED"
-      fi
+      port="${rule%%/*}"
+      proto="${rule##*/}"
+      build_dynamic_rule_line "$proto" "$port" "$ip" >> "$TMP_DYNAMIC_DESIRED"
+      
     done
   done
 fi
