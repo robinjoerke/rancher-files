@@ -167,7 +167,17 @@ apt-get install -y vim htop
 # -----------------------------------------------------------------------------
 log "Installing and configuring UFW…"
 apt-get install -y ufw
+
 ufw --force reset
+rm -f /var/lib/ufw-ip-sync/dynamic.state
+rm -f /var/lib/ufw-ip-sync/static.state
+
+curl -sSL https://raw.githubusercontent.com/robinjoerke/rancher-files/refs/heads/main/dynamic-fw-rules.sh -o dynamic-fw-rules.sh
+chmod +x dynamic-fw-rules.sh
+./dynamic-fw-rules.sh
+rm dynamic-fw-rules.sh
+
+
 log "writing ip whitelist"
 cat <<EOF > "/etc/ufw-ip-sync/ips.conf"
 157.90.155.238
@@ -217,11 +227,8 @@ cat <<EOF >> "/etc/ufw-ip-sync/dynamic-rules.conf"
 EOF
 fi
 
-
-
-ufw --force enable
-ufw status verbose
 sudo /usr/local/bin/ufw-ip-sync.sh
+ufw --force enable
 
 # -----------------------------------------------------------------------------
 # 7) Fail2Ban minimal hardening
