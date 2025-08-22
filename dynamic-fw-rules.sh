@@ -155,37 +155,62 @@ sync_rule_set() {
   OLD="$(mktemp)"; TMP_ADD="$(mktemp)"; TMP_DEL="$(mktemp)"
   trap 'rm -f "$OLD" "$TMP_ADD" "$TMP_DEL"' RETURN
 
+  # If the state file exists, copy it, otherwise, initialize it to empty
   if [[ -f "$STATE_FILE" ]]; then
     cp "$STATE_FILE" "$OLD"
   else
     : > "$OLD"
   fi
 
+  # Sort the desired and old rules to compare
   sort -u -o "$DESIRED" "$DESIRED"
   sort -u -o "$OLD" "$OLD"
 
-  comm -13 "$OLD" "$DESIRED" > "$TMP_ADD"   # present in desired only
-  comm -23 "$OLD" "$DESIRED" > "$TMP_DEL"   # present in old only
+  # Compare the current state with the desired state
+  comm -13 "$OLD" "$DESIRED" > "$TMP_ADD"   # Rules present in desired, but not in the old state
+  comm -23 "$OLD" "$DESIRED" > "$TMP_DEL"   # Rules present in the old state, but not in desired
 
   echo "[$LABEL] To add: $(wc -l < "$TMP_ADD") | To remove: $(wc -l < "$TMP_DEL")"
 
-  if [[ -s "$TMP_DEL" ]]; then
-    while IFS= read -r r; do
-      echo "deleting rule $r"
-      apply_rule delete "$r"
-    done < "$TMP_DEL"
+  # Debug: Check what rules are going to be added or deleted
+  echo "[DEBUG] OLD (Current Rules):"
+  cat "$OLD"
+  echo "[DEBUG] DESIRED (Desired Rules):"
+  cat "$DESIRED"
+  echo "[DEBUG] TMP_ADD (Rules to Add):"
+  cat "$TMP_ADD"
+  echo "[DEBUG] TMP_DEL (Rules to Delete):"
+  cat "$TMP_DEL"
+
+  # If TMP_ADD is empty, force adding the rule (even if it exists in OLD)
+  if [[ ! -s "$TMP_ADD" ]]; then
+    echo "Forcing rule addition because TMP_ADD is empty"
+    # Force add any rule that should be in TMP_ADD
+    cat "$DESIRED" >> "$TMP_ADD"
   fi
+
+  # Add the new rules
   if [[ -s "$TMP_ADD" ]]; then
     while IFS= read -r r; do
-      echo "adding rule $r"
+      echo "Adding rule: $r"
       apply_rule "" "$r"
     done < "$TMP_ADD"
   fi
 
+  # Remove the old rules
+  if [[ -s "$TMP_DEL" ]]; then
+    while IFS= read -r r; do
+      echo "Deleting rule: $r"
+      apply_rule delete "$r"
+    done < "$TMP_DEL"
+  fi
+
+  # After applying, save the current state
   if (( DRY_RUN == 0 )); then
     cp "$DESIRED" "$STATE_FILE"
   fi
 }
+
 
 # ---------- Build desired STATIC rules ----------
 TMP_STATIC_DESIRED="$(mktemp)"
