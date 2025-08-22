@@ -132,6 +132,7 @@ build_dynamic_rule_line() {
   local proto="$1"   # Protocol (tcp or udp)
   local port="$2"    # Port
   local ip="$3"      # IP address
+  local group="$4"   # Group name (optional for tagging)
   
   # Ensure that the rule has the correct format
   if [[ -z "$proto" || -z "$port" || -z "$ip" ]]; then
@@ -140,7 +141,7 @@ build_dynamic_rule_line() {
   fi
   
   # Build the UFW rule in the correct format
-  echo "allow ${proto} from ${ip} to any port ${port}"
+  echo "allow ${proto} from ${ip} to any port ${port} comment \"sg:${group}\""
 }
 
 sync_rule_set() {
@@ -220,8 +221,7 @@ else
     for rule in "${DYN_RULES[@]}"; do
       port="${rule%%/*}"
       proto="${rule##*/}"
-      build_dynamic_rule_line "$proto" "$port" "$ip" >> "$TMP_DYNAMIC_DESIRED"
-      
+      build_dynamic_rule_line "$proto" "$port" "$ip" "dynamic" >> "$TMP_DYNAMIC_DESIRED"
     done
   done
 fi
