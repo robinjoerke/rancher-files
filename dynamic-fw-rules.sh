@@ -18,9 +18,6 @@ mkdir -p "$CFG_DIR" "$STATE_DIR"
 # Create domains configuration (list of IPs)
 cat <<EOF > "$CFG_DIR/ips.conf"
 # List of IPs to apply rules to
-192.168.1.1
-10.0.0.2
-203.0.113.10
 EOF
 
 # Create dynamic rules configuration (list of ports to be applied to the IPs)
@@ -46,10 +43,6 @@ cat <<'EOF' > "$SCRIPT_PATH"
 
 set -euo pipefail
 
-# Apply default UFW policies
-ufw default allow outgoing
-ufw default deny incoming
-
 CFG_DIR="/etc/ufw-ip-sync"
 IPS_CFG="${CFG_DIR}/ips.conf"
 DYNAMIC_CFG="${CFG_DIR}/dynamic-rules.conf"
@@ -59,16 +52,14 @@ STATE_DIR="/var/lib/ufw-ip-sync"
 DRY_RUN=0
 
 usage() {
-  cat <<EOF
-Usage: $0 [--dry-run] [--config-dir PATH]
-
-Reads:
-  IPs: ${IPS_CFG}
-  dynamic rules: ${DYNAMIC_CFG}
-  static rules:  ${STATIC_CFG}
-
-Stores state in: ${STATE_DIR}
-EOF
+  echo "Usage: $0 [--dry-run] [--config-dir PATH]"
+  echo ""
+  echo "Reads:"
+  echo "  IPs: ${IPS_CFG}"
+  echo "  dynamic rules: ${DYNAMIC_CFG}"
+  echo "  static rules:  ${STATIC_CFG}"
+  echo ""
+  echo "Stores state in: ${STATE_DIR}"
 }
 
 while [[ $# -gt 0 ]]; do
@@ -109,6 +100,15 @@ read_static_rules() {
 # Parse and process ips.conf
 parse_ips() {
   grep -v '^\s*#' "$IPS_CFG" | awk 'NF' | trim
+}
+
+# Expand a port range (e.g., 30000:32767) into individual ports
+expand_port_range() {
+  local start_port="$1"
+  local end_port="$2"
+  for port in $(seq "$start_port" "$end_port"); do
+    echo "tcp:$port"
+  done
 }
 
 apply_rule() {
@@ -206,7 +206,16 @@ else
     for rule in "${DYN_RULES[@]}"; do
       proto="${rule%%:*}"
       port="${rule##*:}"
-      build_dynamic_rule_line "$proto" "$port" "$ip" >> "$TMP_DYNAMIC_DESIRED"
+
+      # Check if it's a port range (e.g., 30000:32767)
+      if [[ "$port" == *":"* ]]; then
+        start_port=$(echo "$port" | cut -d':' -f1)
+        end_port=$(echo "$port" | cut -d':' -f2)
+        # Expand the range and add each port
+        expand_port_range "$start_port" "$end_port" >> "$TMP_DYNAMIC_DESIRED"
+      else
+        build_dynamic_rule_line "$proto" "$port" "$ip" >> "$TMP_DYNAMIC_DESIRED"
+      fi
     done
   done
 fi
