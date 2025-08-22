@@ -223,7 +223,7 @@ cat <<EOF >> "/etc/ufw-ip-sync/dynamic-rules.conf"
 EOF
 fi
 
-sudo /usr/local/bin/ufw-ip-sync.sh
+/usr/local/bin/ufw-ip-sync.sh
 ufw --force enable
 
 # -----------------------------------------------------------------------------
