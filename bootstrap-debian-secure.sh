@@ -264,7 +264,7 @@ systemctl enable --now fail2ban
 # -----------------------------------------------------------------------------
 if [[ "${ROLE}" == "worker" && "${INSTALL_ISCSI_ON_WORKER}" == "true" ]]; then
   log "Installing open-iscsi and blkid(e2fsprogs) for Longhorn (worker)…"
-  apt-get install -y open-iscsi e2fsprogs
+  apt-get install -y open-iscsi
   systemctl enable --now iscsid || true
 fi
 
