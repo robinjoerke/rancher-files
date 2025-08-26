@@ -164,7 +164,7 @@ apt-get install -y ufw
 ufw --force reset
 rm -f /var/lib/ufw-ip-sync/dynamic.state
 rm -f /var/lib/ufw-ip-sync/static.state
-sudo sed -i 's/IPV6=yes/IPV6=no/' /etc/default/ufw
+sudo sed -i 's/IPV6=no/IPV6=yes/' /etc/default/ufw
 
 
 curl -sSL https://raw.githubusercontent.com/robinjoerke/rancher-files/refs/heads/main/dynamic-fw-rules.sh  | bash
@@ -180,6 +180,15 @@ cat <<EOF > "/etc/ufw-ip-sync/ips.conf"
 148.251.138.100
 148.251.137.76
 148.251.137.75
+2a01:4f8:c014:f7e1::/64
+2a01:4f8:c012:62dd::/64
+2a01:4f8:c014:41f8::/64
+2a01:4f8:c014:41f3::/64
+2a01:4f8:c014:f7c9::/64
+2a01:4f8:c014:c273::/64
+2a01:4f8:210:4262::/64
+2a01:4f8:210:4158::/64
+2a01:4f8:210:4159::/64
 EOF
 log "writing static firewall rules"
 cat <<EOF > "/etc/ufw-ip-sync/static-rules.conf"
