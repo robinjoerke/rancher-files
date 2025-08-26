@@ -189,20 +189,33 @@ EOF
 
 log "writing dynamic firewall rules (applied for all ips from whitelist)"
 cat <<EOF > "/etc/ufw-ip-sync/dynamic-rules.conf"
+179/tcp
+2376/tcp
+2379:2381/tcp
 6443/tcp
-9345/tcp
-10250/tcp
-8472/udp
+6783/tcp
+8443/tcp
 9099/tcp
+9345/tcp
+9443/tcp
+9796/tcp
+10250/tcp
+10254/tcp
+30000:32767/tcp
+4789/udp
+6783:6784/udp
+8472/udp
+30000:32767/udp
 EOF
 
 
   
-if [[ "${ROLE}" == "etcd-cp" || "${ROLE}" == "rancher" ]]; then
+if [[ "${ROLE}" == "etcd-cp"]]; then
   log "writing dynamic firewall rules for etcd-cp and rancher nodes"
   # Ports for etcd + control-plane nodes
   cat <<EOF >> "/etc/ufw-ip-sync/dynamic-rules.conf"
-2379:2381/tcp
+allow 80/tcp
+allow 443/tcp
 EOF
 fi  
 if [[ "${ROLE}" == "worker" || "${ROLE}" == "rancher" ]]; then
@@ -211,10 +224,6 @@ if [[ "${ROLE}" == "worker" || "${ROLE}" == "rancher" ]]; then
   cat <<EOF >> "/etc/ufw-ip-sync/static-rules.conf"
 allow 80/tcp
 allow 443/tcp
-EOF
-  log "writing dynamic firewall rules for etcd-cp and rancher nodes"
-cat <<EOF >> "/etc/ufw-ip-sync/dynamic-rules.conf"
-30000:32767/tcp
 EOF
 fi
 
@@ -249,6 +258,14 @@ if [[ "${ROLE}" == "worker" && "${INSTALL_ISCSI_ON_WORKER}" == "true" ]]; then
   apt-get install -y open-iscsi
   systemctl enable --now iscsid || true
 fi
+
+
+# ----------------------------------------------------------------------------- 
+# 9) Install plocate and update db
+# ----------------------------------------------------------------------------- 
+log "Installing locate..."
+apt-get install -y plocate
+updatedb
 
 # =============================================================================
 # Additional Hardening Steps
