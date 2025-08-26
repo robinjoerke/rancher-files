@@ -208,7 +208,14 @@ cat <<EOF > "/etc/ufw-ip-sync/dynamic-rules.conf"
 30000:32767/udp
 EOF
 
-
+if [[ "${ROLE}" == "worker" || "${ROLE}" == "rancher" ]]; then
+  log "writing static firewall rules for worker and rancher nodes"
+  # Ports for worker nodes
+  cat <<EOF >> "/etc/ufw-ip-sync/static-rules.conf"
+allow 80/tcp
+allow 443/tcp
+EOF
+fi
   
 if [[ "${ROLE}" == "etcd-cp" ]]; then
   log "writing dynamic firewall rules for etcd-cp and rancher nodes"
@@ -218,14 +225,7 @@ allow 80/tcp
 allow 443/tcp
 EOF
 fi  
-if [[ "${ROLE}" == "worker" || "${ROLE}" == "rancher" ]]; then
-  log "writing static firewall rules for worker and rancher nodes"
-  # Ports for worker nodes
-  cat <<EOF >> "/etc/ufw-ip-sync/static-rules.conf"
-allow 80/tcp
-allow 443/tcp
-EOF
-fi
+
 
 /usr/local/bin/ufw-ip-sync.sh
 ufw --force enable && ufw reload
