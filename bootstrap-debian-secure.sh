@@ -263,8 +263,8 @@ systemctl enable --now fail2ban
 # 8) Longhorn support (open-iscsi) — typically workers
 # -----------------------------------------------------------------------------
 if [[ "${ROLE}" == "worker" && "${INSTALL_ISCSI_ON_WORKER}" == "true" ]]; then
-  log "Installing open-iscsi for Longhorn (worker)…"
-  apt-get install -y open-iscsi
+  log "Installing open-iscsi and blkid(e2fsprogs) for Longhorn (worker)…"
+  apt-get install -y open-iscsi e2fsprogs
   systemctl enable --now iscsid || true
 fi
 
