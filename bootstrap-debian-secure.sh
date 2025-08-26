@@ -221,8 +221,8 @@ if [[ "${ROLE}" == "etcd-cp" ]]; then
   log "writing dynamic firewall rules for etcd-cp and rancher nodes"
   # Ports for etcd + control-plane nodes
   cat <<EOF >> "/etc/ufw-ip-sync/dynamic-rules.conf"
-allow 80/tcp
-allow 443/tcp
+80/tcp
+443/tcp
 EOF
 fi  
 
